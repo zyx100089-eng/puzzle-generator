@@ -76,9 +76,8 @@ python3 cli.py --play                 # play with hints
   it is treated as "not provably unique", so the minimality guarantee
   is: no clue is removable while keeping uniqueness, as proven within
   the budget.
-- The difficulty tiers are a *model* of human difficulty (not
-  calibrated against human solvers) — the rationale and this honest
-  caveat are discussed in INTERVIEW_GUIDE.md.
+- The difficulty tiers are a *model* of human difficulty, not
+  calibrated against human solvers.
 - Performance: the loop-closure rule is O(E) per call (ON-edge clue
   counts computed once, early exit with no ON edges); uniqueness
   checks on near-minimal 6x6 cost ~5 s each, so sparse 6x6 generation

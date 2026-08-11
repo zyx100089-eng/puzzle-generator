@@ -77,7 +77,7 @@ def demo_duality() -> None:
     n = Solver(puzzle.copy()).count_solutions(cap=3)
     print(f"  solutions (by the same solver): {n}")
     n2 = Solver(puzzle.copy()).count_solutions(cap=3)
-    print(f"  re-counted independently:       {n2}")
+    print(f"  re-counted (deterministic, same result): {n2}")
     # the unique solution
     print("  the unique solution:")
     s = puzzle.copy()
