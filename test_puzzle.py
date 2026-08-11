@@ -195,6 +195,70 @@ class TestDifficulty:
         assert d == Difficulty.EASY
         assert info["guesses"] == 0
 
+    # Cross-tier discrimination: the same puzzles the demo generates
+    # (deterministic seeds), embedded so the test needs no generation.
+    # Each must grade exactly at its expected tier, and the technique
+    # tiers used must be consistent with the difficulty hierarchy
+    # (EASY uses only clue rules; MEDIUM adds vertex rules; HARD adds
+    # loop-closure; EXPERT needs search).
+    _TIER_PUZZLES = {
+        Difficulty.EASY: [
+            [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 1, 0, 0],
+            [0, 1, 4, 1, 0], [0, 0, 1, 0, 0],
+        ],
+        Difficulty.MEDIUM: [
+            [0, -1, 0, 0, -1], [-1, 0, 0, 0, 1], [-1, 0, 0, 1, 4],
+            [0, 0, 0, 0, 1], [0, 0, 0, 0, -1],
+        ],
+        Difficulty.HARD: [
+            [0, 0, 0, 0, 0], [0, -1, -1, 0, -1], [-1, -1, 3, 1, -1],
+            [0, 1, -1, 1, -1], [0, -1, 1, 0, -1],
+        ],
+        Difficulty.EXPERT: [
+            [-1, 4, -1, -1, -1], [-1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1],
+            [-1, -1, -1, -1, -1],
+        ],
+    }
+
+    @pytest.mark.parametrize("tier", list(Difficulty))
+    def test_grade_tier_discrimination(self, tier):
+        p = Slitherlink(5, 5, self._TIER_PUZZLES[tier])
+        d, info = grade(p)
+        assert d == tier, f"expected {tier.name}, got {d.name}"
+        if tier == Difficulty.EXPERT:
+            assert info["guesses"] > 0
+        else:
+            assert info["guesses"] == 0
+
+    def test_easy_uses_only_clue_rules(self):
+        p = Slitherlink(5, 5, self._TIER_PUZZLES[Difficulty.EASY])
+        d, info = grade(p)
+        assert d == Difficulty.EASY
+        tiers_used = {_tier_of(t) for t in info["techniques"].values()}
+        assert tiers_used <= {0}, f"EASY used non-clue tiers: {tiers_used}"
+
+    def test_medium_uses_vertex_rules(self):
+        p = Slitherlink(5, 5, self._TIER_PUZZLES[Difficulty.MEDIUM])
+        d, info = grade(p)
+        assert d == Difficulty.MEDIUM
+        tiers_used = {_tier_of(t) for t in info["techniques"].values()}
+        assert 1 in tiers_used, "MEDIUM should need vertex rules"
+        assert 2 not in tiers_used, "MEDIUM should not need loop rules"
+
+    def test_hard_uses_loop_rules(self):
+        p = Slitherlink(5, 5, self._TIER_PUZZLES[Difficulty.HARD])
+        d, info = grade(p)
+        assert d == Difficulty.HARD
+        tiers_used = {_tier_of(t) for t in info["techniques"].values()}
+        assert 2 in tiers_used, "HARD should need loop-closure rules"
+
+    def test_expert_requires_search(self):
+        p = Slitherlink(5, 5, self._TIER_PUZZLES[Difficulty.EXPERT])
+        d, info = grade(p)
+        assert d == Difficulty.EXPERT
+        assert info["guesses"] > 0, "EXPERT should require branching search"
+
     def test_grade_contradiction(self):
         p = Slitherlink(2, 2, [[4, 0], [-1, -1]])
         d, info = grade(p)
