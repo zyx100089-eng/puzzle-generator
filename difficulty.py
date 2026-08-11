@@ -5,9 +5,9 @@ Grading protocol (auditable, deterministic):
 1. Run the deduction rules **without** search, tracking which technique
    first decided each edge.
 2. If deduction alone solves it -> difficulty by technique tier:
-       tier 0: zero/three clues, clue saturation      -> EASY
-       tier 1: vertex degree rules                    -> MEDIUM
-       tier 2: loop-closure rules                     -> HARD
+       tier 0: clue saturation / clue counting       -> EASY
+       tier 1: vertex degree rules                   -> MEDIUM
+       tier 2: loop-closure rules                    -> HARD
        (first tier needed dominates)
 3. If search is needed -> count the number of branching guesses the
    solver needed after a full deduction pass (with tracking).  More
@@ -37,8 +37,6 @@ class Difficulty(IntEnum):
 
 
 _TIER = {
-    "zero-clue": 0,
-    "three-clue": 0,
     "clue-saturated": 0,
     "clue-count": 0,
     "corner-1": 0,
@@ -48,7 +46,6 @@ _TIER = {
     "vertex-force-on": 1,
     "vertex-force-off": 1,
     "probe": 1,
-    "forced-close": 2,
     "no-early-loop": 2,
 }
 
@@ -61,9 +58,11 @@ def grade(puzzle: Slitherlink, max_guesses: int = 8,
           budget: int | None = 4000) -> tuple[Difficulty, dict]:
     """Grade a puzzle.  Returns (difficulty, details) where details has
     'techniques' (dict technique -> count) and 'guesses' (int).  budget
-    bounds the search used to confirm EXPERT puzzles (inconclusive =>
-    EXPERT).  max_guesses caps the reported guess count (cap+1 means
-    'needs more than cap')."""
+    is passed to the guess-counting search; the guess count is bounded
+    by the recursion depth cap (cap+2), and the budget is not consulted
+    during deduction-only grading (pass 1 is pure deduction, which
+    terminates by rule exhaustion or contradiction).  max_guesses caps
+    the reported guess count (cap+1 means 'needs more than cap')."""
     # pass 1: deduction only, track techniques (the solver works on a
     # private copy, so the caller's puzzle is never mutated)
     s = Solver(puzzle, track=True, budget=budget)
@@ -96,10 +95,11 @@ def _count_guesses(puzzle: Slitherlink, cap: int,
                    budget: int | None = 4000) -> int:
     """How many branching guesses are needed to solve, capped at cap.
 
-    Runs a budgeted DFS; the guess count is the minimum number of
+    Runs a depth-bounded DFS; the guess count is the minimum number of
     branching decisions along a solution path.  Returns -1 if the puzzle
     is contradictory at the root, or cap+1 if it needs more than cap
-    guesses (or the budget is exhausted)."""
+    guesses.  The recursion is bounded by depth (cap + 2); the budget
+    is passed through but is not consulted by the deduction steps."""
     p = puzzle.copy()
     s = Solver(p, budget=budget, copy=False)
     try:

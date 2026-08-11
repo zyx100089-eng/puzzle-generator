@@ -46,9 +46,8 @@ class Solver:
         self.nodes = 0
         self.aborted = False
         self.technique_used: dict[Edge, str] = {}
-        # probing (failed-literal detection): bounded per-probe budget
-        # and a total probe cap, so deduce() stays cheap on hard puzzles
-        self._probe_budget = 500
+        # probing (failed-literal detection): a total probe cap shared
+        # through the search, so deduce() stays cheap on hard puzzles
         self._probe_limit = 200
         self._probe_state = {"count": 0}
 
@@ -329,13 +328,13 @@ class Solver:
         becomes a deduction.  This prunes the search tree dramatically
         on puzzles whose ambiguity is only a few edges deep.
 
-        The probe budget and total probe count are shared through the
-        search (self._probe_state), so probing never explodes the
-        runtime: at most _probe_limit probes of _probe_budget nodes
-        each, across the whole search.
+        The total probe count is capped by _probe_limit, shared through
+        the search (self._probe_state), so probing never explodes the
+        runtime.  Each probe runs a bounded deduction (deduce's own
+        pass limit), which is what keeps a single probe cheap.
         """
         st = self._probe_state
-        if self._probe_budget is None or st["count"] >= self._probe_limit:
+        if st["count"] >= self._probe_limit:
             return False
         eid = self._mrv_eid()
         if eid is None:
@@ -345,11 +344,11 @@ class Solver:
             st["count"] += 1
             child = self.p.copy()
             child._s[eid] = state
-            s = Solver(child, budget=self._probe_budget, copy=False)
+            s = Solver(child, copy=False)
             s._probe_limit = 0  # no recursive probing inside a probe
             try:
                 s.deduce()
-                outcomes[state] = s.aborted or not child.check_local()
+                outcomes[state] = not child.check_local()
             except Contradiction:
                 outcomes[state] = True  # contradiction -> state impossible
         if outcomes[ON] and not outcomes[OFF]:
