@@ -1,69 +1,101 @@
 # Slitherlink Puzzle Generator
 
-A constraint satisfaction project: generate Slitherlink puzzles with provably unique solutions and grade their difficulty using human solving techniques. Whereas most related work focuses on solvers, this project addresses the inverse problem of generating puzzles.
+Generate Slitherlink puzzles with unique solutions, and grade their
+difficulty by the *techniques a human would need*.
 
-## Background
+Most work on logic puzzles builds solvers. This project does the
+inverse: given a loop, it deletes clues one at a time (re-checking
+uniqueness after every deletion) until no clue can be removed — a
+fixed point. The output is a minimal puzzle where every clue earns its
+place.
 
-Slitherlink is a loop-construction puzzle played on a grid of cells, some of which contain clue numbers 0–3. A solution is a single closed loop along the grid edges that passes exactly the number of edges around each clued cell. Generating a puzzle requires three things:
+## Why I chose Slitherlink
 
-1. a valid underlying loop,
-2. enough clues to determine that loop uniquely, and
-3. control over how hard the puzzle is to solve.
+I wanted a constraint problem with three properties:
 
-Uniqueness is the core requirement: a puzzle with multiple solutions is defective. This project proves uniqueness by construction, using the same solver that a player would use, bounded by a node budget.
+1. **A natural difficulty hierarchy.** Slitherlink can be solved by
+   purely local rules (clue saturation, corners), then vertex-degree
+   rules, then global loop/connectivity reasoning, then search. That
+   maps onto difficulty tiers almost by itself.
+2. **A duality I could exploit.** The solver's rules are exactly the
+   tools the generator needs to verify uniqueness — one codebase, two
+   jobs. I liked that the generator and solver are the same machine
+   pointing in opposite directions.
+3. **Something I'd actually play.** Sudoku generators exist everywhere.
+   Slitherlink was a puzzle I could get wrong in interesting ways.
 
-## Approach
+## How it works
 
-### Generation
+**Generation.** A loop is built from random spanning trees: the
+fundamental cycles of a spanning tree, combined with random
+rectangles, produce valid loop shapes. Clues are then deleted
+one-at-a-time with uniqueness re-verified after each deletion, until
+no further deletion preserves uniqueness (a fixed point).
 
-A loop is generated from random spanning trees: taking the fundamental cycles of a spanning tree and combining them with random rectangles produces valid loop shapes. Clues are then deleted one at a time, with uniqueness re-verified after each deletion, until no further clue can be removed without losing uniqueness (a fixed point). The result is a minimal puzzle in which every clue is necessary.
+**Solving.** The solver applies technique tiers in order: clue rules
+(saturation, edge count) → corner rules (corner-1/corner-3
+unconditional, corner-2 conditional) → vertex degree rules → loop and
+connectivity rules (no-early-loop) → probing (failed-literal detection)
+when deduction stalls.
 
-Difficulty is controlled through clue density. Dense puzzles solve with local rules only; sparse minimal puzzles stall deduction and require search. `generate(..., target=...)` uses rejection sampling to hit a specific difficulty tier.
+**Difficulty grading.** Which tier is needed decides the grade:
 
-### Solving
+| Tier | Techniques needed |
+|---|---|
+| EASY | clue rules only |
+| MEDIUM | + vertex rules |
+| HARD | + loop rules |
+| EXPERT | search (guess-count sub-metric, capped at 8) |
 
-The solver (`solver.py`) applies a hierarchy of human techniques in order:
+**The fixed point.** Uniqueness proofs are bounded by a node budget.
+A search that exceeds the budget is treated as *not provably unique* —
+so the guarantee is precise: no clue is removable while keeping
+uniqueness, as proven within the budget. (The headline "provably
+unique" therefore has this scope; beyond the budget, the puzzle is
+minimal *as far as I checked*.)
 
-- clue rules (saturation, edge count),
-- corner rules (corner-1 / corner-3 unconditional; corner-2 conditional pair rule),
-- vertex degree rules,
-- loop and connectivity rules (no-early-loop),
-- probing (failed-literal detection) when deduction stalls.
+## What's verified
 
-All rules are sound by the corner-vertex degree argument and were verified exhaustively: on every valid loop of small grids (1275 loops on 2x2, 3x3, and 3x4 grids), the deduction never contradicts the loop. The solver operates on a private copy of the puzzle and never mutates the caller's state.
+- **Rule soundness, exhaustively.** On every valid loop of small
+  grids — 1275 loops across 2×2, 3×3, and 3×4 grids — the deduction
+  rules never contradict the loop. The solver operates on a private
+  copy of the puzzle and never mutates the caller's state.
+- **Batch verification** (`verify.py`): uniqueness, minimality,
+  solvability, and difficulty distribution across generated puzzles.
+- **Unit tests**: 25 tests including the solver, generator, and
+  grading.
 
-### Difficulty grading
+## Performance
 
-Difficulty is graded as a function of which technique tiers are needed:
+The loop-closure rule is O(E) per call: ON-edge clue counts are
+computed once, with early exit when there are no ON edges. Uniqueness
+checks on near-minimal 6×6 puzzles cost ~5 s each, so generating a
+sparse 6×6 puzzle takes about 75 s — the price of proving uniqueness
+by construction.
 
-- EASY: clue rules only
-- MEDIUM: clue rules + vertex rules
-- HARD: clue rules + vertex rules + loop rules
-- EXPERT: search required (guess-count sub-metric, capped at 8)
+## What I didn't do (and why)
 
-The tiers model human difficulty but are not calibrated against human solvers.
-
-### Uniqueness guarantees
-
-Uniqueness proofs are bounded by a node budget. A search that exceeds the budget is treated as "not provably unique", so the minimality guarantee is precise: no clue is removable while keeping uniqueness, as proven within the budget.
+- **Human calibration.** The difficulty tiers model human technique,
+  but I never tested them against actual solvers. The tiers are
+  *plausible*, not *validated* — I'd want a few hundred puzzle-times
+  from real people before claiming more.
+- **Larger grids.** 6×6 is the practical ceiling for the
+  exhaustive soundness check and for acceptable generation time.
+  Everything scales, but the verification doesn't.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `grid.py` | Slitherlink grid model (cells, clue numbers, edges) with index-based internals |
-| `solver.py` | Constraint solver with the technique hierarchy described above |
-| `generator.py` | Random-loop generation, clue deletion with uniqueness verification, fixed-point minimality, difficulty-targeted rejection sampling |
+| `grid.py` | Grid model (cells, clue numbers, edges), index-based internals |
+| `solver.py` | Constraint solver with the technique hierarchy |
+| `generator.py` | Random-loop generation, clue deletion with uniqueness verification, difficulty-targeted rejection sampling |
 | `difficulty.py` | Difficulty grading into four tiers |
-| `cli.py` | Terminal interface: play, generate, grade; play mode has a `hint` command explaining the technique that decides the next edge |
+| `cli.py` | Play, generate, and grade from the terminal; play mode has a `hint` command explaining the technique that decides the next edge |
 | `verify.py` | Batch verification: uniqueness, minimality, solvability, difficulty distribution |
 | `soundness.py` | Exhaustive rule-soundness check over all valid loops on small grids |
-| `demo.py` | Demonstration: one puzzle per tier, the generator/solver duality, difficulty distribution, saved chart (`out/difficulty.png`) |
-| `test_puzzle.py` | Unit test suite (25 tests) |
-
-## Performance
-
-The loop-closure rule is O(E) per call: ON-edge clue counts are computed once, with early exit when there are no ON edges. Uniqueness checks on near-minimal 6x6 puzzles cost approximately 5 s each, so generating sparse 6x6 puzzles takes about 75 s.
+| `demo.py` | One puzzle per tier, generator/solver duality, difficulty distribution chart |
+| `test_puzzle.py` | 25 unit tests |
 
 ## Running
 
@@ -80,3 +112,11 @@ python3 cli.py --play                 # play with hints
 
 - Slitherlink rules: https://en.wikipedia.org/wiki/Slitherlink
 - Norvig's Sudoku solver write-up (solver philosophy)
+
+## What I'd do next
+
+- Calibrate the difficulty tiers against real solve times.
+- A `hint` mode that explains *why* the next rule fires (it exists
+  in `cli.py`; I'd want it visualised).
+- Larger grids with a bounded-search uniqueness proof instead of
+  exhaustive soundness.
