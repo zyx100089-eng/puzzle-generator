@@ -51,9 +51,9 @@ everyone writes solvers, almost nobody writes generators.
   loop on small grids (1275 loops on 2x2/3x3/3x4), deduce must never
   contradict the loop
 - `test_puzzle.py` - pytest unit suite (25 tests)
-- `demo.py` - the personal-statement story: one puzzle per tier, the
-  generator<=>solver duality, a difficulty distribution demo, and a
-  saved difficulty chart (`out/difficulty.png`)
+- `demo.py` - one puzzle per tier, the generator<=>solver duality, a
+  difficulty distribution demo, and a saved difficulty chart
+  (`out/difficulty.png`)
 
 ## Running
 
@@ -61,7 +61,7 @@ everyone writes solvers, almost nobody writes generators.
 python3 -m pytest test_puzzle.py -q   # fast unit tests (~30 s)
 python3 soundness.py                  # exhaustive rule soundness
 python3 verify.py                     # full verification (minutes)
-python3 demo.py                       # personal-statement walkthrough
+python3 demo.py                       # difficulty tiers walkthrough
 python3 cli.py --h 6 --w 6 --seed 3 --grade
 python3 cli.py --play                 # play with hints
 ```
