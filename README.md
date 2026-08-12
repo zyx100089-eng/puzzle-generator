@@ -47,6 +47,12 @@ when deduction stalls.
 | HARD | + loop rules |
 | EXPERT | search (guess-count sub-metric, capped at 8) |
 
+![Difficulty vs clue density](out/difficulty.png)
+
+*Dense puzzles solve with local rules only; sparse minimal puzzles
+stall deduction and require search. `generate(..., target=...)` uses
+rejection sampling to hit a specific tier.*
+
 **The fixed point.** Uniqueness proofs are bounded by a node budget.
 A search that exceeds the budget is treated as *not provably unique* —
 so the guarantee is precise: no clue is removable while keeping
