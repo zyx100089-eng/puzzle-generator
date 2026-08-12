@@ -80,10 +80,3 @@ python3 cli.py --play                 # play with hints
 
 - Slitherlink rules: https://en.wikipedia.org/wiki/Slitherlink
 - Norvig's Sudoku solver write-up (solver philosophy)
-
-## What I Learned
-
-- The generator-solver duality: using the player's own solver to prove uniqueness guarantees the guarantee is meaningful in practice, not just in theory.
-- MRV heuristics (clued cells before unclued) and probing make a measurable difference to whether deduction stalls.
-- Minimality to a fixed point is a clean stopping criterion: it terminates, and the result is exactly "no clue removable while preserving uniqueness".
-- Rejection sampling is simple but expensive; the density-floor approach to difficulty control is what actually makes generation tractable.
