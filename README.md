@@ -125,6 +125,28 @@ python3 cli.py --h 6 --w 6 --seed 3 --grade
 python3 cli.py --play                 # play with hints
 ```
 
+## How to verify my work
+
+The claims in this README each have a dedicated check, in increasing
+order of cost:
+
+```bash
+python3 -m pytest test_puzzle.py -q   # 25 unit tests (~30 s)
+python3 soundness.py                  # EVERY valid loop on small grids:
+                                      # 1275 loops across 2x2, 3x3, 3x4 —
+                                      # deduction rules never contradict
+                                      # a true loop (~1 min)
+python3 verify.py                     # uniqueness, minimality, solvability
+                                      # + difficulty distribution over a
+                                      # batch (~5 min)
+```
+
+The headline "every clue earns its place" is `verify.py`'s
+`check_minimal`: for each clue, removing it must admit a second
+solution or make the puzzle unsolvable. The "provably unique" claim
+is bounded by the search budget — `verify.py` runs with a 100k-node
+budget and asserts the guarantee at exactly that scope, no more.
+
 ## Playing with hints
 
 The `--play` mode is the part of the project that's easiest to miss:
