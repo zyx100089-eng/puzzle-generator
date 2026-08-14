@@ -3,6 +3,13 @@
 Generate Slitherlink puzzles with unique solutions, and grade their
 difficulty by the *techniques a human would need*.
 
+![A generated 6x6 puzzle with its unique solution loop](docs/puzzle.png)
+
+*`python3 cli.py --h 6 --w 6 --seed 3` — a generated puzzle (clues in
+black) with the unique solution loop overlaid in blue. Every clue
+earns its place: removing any one of them would admit a second
+solution.*
+
 Most work on logic puzzles builds solvers. This project does the
 inverse: given a loop, it deletes clues one at a time (re-checking
 uniqueness after every deletion) until no clue can be removed — a
@@ -113,6 +120,49 @@ python3 demo.py                       # difficulty tiers walkthrough
 python3 cli.py --h 6 --w 6 --seed 3 --grade
 python3 cli.py --play                 # play with hints
 ```
+
+## Playing with hints
+
+The `--play` mode is the part of the project that's easiest to miss:
+the `hint` command runs the solver's deduction rules on a copy of the
+puzzle and explains *which technique* decides the next edge, in human
+terms:
+
+```
+$ python3 cli.py --h 5 --w 5 --seed 7 --play
+Generated puzzle:
++ + + + + +
+ 2   1     
++ + + + + +
+ 2   1     
++ + + + + +
+   1 0     
++ + + + + +
+           
++ + + + + +
+     0     
++ + + + + +
+
+Toggle edges with 'r,c-h' / 'r,c-v', 'hint' for a hint, 'done' to finish, 'quit' to quit.
+> hint
+  hint: cell (2,2) already has its clue count on: the remaining edges must be OFF
++ + + + + +
+ 2   1     
++ + + + + +
+ 2   1     
++ + + + + +
+   1 0     
++ + + + + +
+           
++ + + + + +
+     0     
++ + + + + +
+> 
+```
+
+The hint text is generated from the same technique hierarchy that
+grades difficulty — the solver, the generator's uniqueness check, and
+the player's hints are all one machine.
 
 ## References
 

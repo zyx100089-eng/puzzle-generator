@@ -1,0 +1,3 @@
+# stdlib only — no third-party dependencies required
+# (matplotlib is optional, used only by demo.py's difficulty chart
+#  and make_puzzle_image.py)
