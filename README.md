@@ -1,5 +1,9 @@
 # Slitherlink Puzzle Generator
 
+[![Tests](https://github.com/zyx100089-eng/puzzle-generator/actions/workflows/tests.yml/badge.svg)](https://github.com/zyx100089-eng/puzzle-generator/actions/workflows/tests.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Generate Slitherlink puzzles with unique solutions, and grade their
 difficulty by the *techniques a human would need*.
 
