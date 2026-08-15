@@ -4,8 +4,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Generate Slitherlink puzzles with unique solutions, and grade their
-difficulty by the *techniques a human would need*.
+Generates Slitherlink puzzles whose solutions are **provably unique**,
+and grades their difficulty by the techniques a *human* would need —
+not by search depth.
 
 ![A generated 6x6 puzzle with its unique solution loop](docs/puzzle.png)
 
@@ -14,26 +15,31 @@ black) with the unique solution loop overlaid in blue. Every clue
 earns its place: removing any one of them would admit a second
 solution.*
 
-Most work on logic puzzles builds solvers. This project does the
-inverse: given a loop, it deletes clues one at a time (re-checking
-uniqueness after every deletion) until no clue can be removed — a
-fixed point. The output is a minimal puzzle where every clue earns its
-place.
+## The idea: generate by deleting
 
-## Why I chose Slitherlink
+Most logic-puzzle projects build solvers. This one does the inverse.
+I start from a valid loop, write down the clue for every cell, then
+delete clues one at a time — re-checking uniqueness after every
+deletion — until no clue can be removed. What's left is a *minimal*
+puzzle: a fixed point where every clue is load-bearing.
 
-I wanted a constraint problem with three properties:
+The thing I like about this design is that the solver and the
+generator are the same machine pointing in opposite directions. The
+solver's deduction rules are exactly the tools the generator needs to
+verify uniqueness. One codebase, two jobs.
+
+## Why Slitherlink
+
+Three properties made me pick it over, say, Sudoku:
 
 1. **A natural difficulty hierarchy.** Slitherlink can be solved by
    purely local rules (clue saturation, corners), then vertex-degree
    rules, then global loop/connectivity reasoning, then search. That
    maps onto difficulty tiers almost by itself.
-2. **A duality I could exploit.** The solver's rules are exactly the
-   tools the generator needs to verify uniqueness — one codebase, two
-   jobs. I liked that the generator and solver are the same machine
-   pointing in opposite directions.
-3. **Something I'd actually play.** Sudoku generators exist everywhere.
-   Slitherlink was a puzzle I could get wrong in interesting ways.
+2. **A duality I could exploit** (above).
+3. **Something I'd actually play.** Sudoku generators exist
+   everywhere. Slitherlink was a puzzle I could get wrong in
+   interesting ways.
 
 ## How it works
 
@@ -64,12 +70,12 @@ when deduction stalls.
 stall deduction and require search. `generate(..., target=...)` uses
 rejection sampling to hit a specific tier.*
 
-**The fixed point.** Uniqueness proofs are bounded by a node budget.
-A search that exceeds the budget is treated as *not provably unique* —
-so the guarantee is precise: no clue is removable while keeping
-uniqueness, as proven within the budget. (The headline "provably
-unique" therefore has this scope; beyond the budget, the puzzle is
-minimal *as far as I checked*.)
+**The fixed point, stated precisely.** Uniqueness proofs are bounded
+by a node budget. A search that exceeds the budget is treated as *not
+provably unique* — so the guarantee is: no clue is removable while
+keeping uniqueness, as proven within the budget. (The headline
+"provably unique" therefore has this scope; beyond the budget, the
+puzzle is minimal *as far as I checked*.)
 
 ## What's verified
 
