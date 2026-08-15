@@ -79,7 +79,8 @@ minimal *as far as I checked*.)
   copy of the puzzle and never mutates the caller's state.
 - **Batch verification** (`verify.py`): uniqueness, minimality,
   solvability, and difficulty distribution across generated puzzles.
-- **Unit tests**: 25 tests including the solver, generator, and
+- **Unit tests**: 30 tests (33 collected, one parametrised over the
+  four difficulty tiers) including the solver, generator, and
   grading.
 
 ## Performance
@@ -87,8 +88,9 @@ minimal *as far as I checked*.)
 The loop-closure rule is O(E) per call: ON-edge clue counts are
 computed once, with early exit when there are no ON edges. Uniqueness
 checks on near-minimal 6×6 puzzles cost ~5 s each, so generating a
-sparse 6×6 puzzle takes about 75 s — the price of proving uniqueness
-by construction.
+sparse 6×6 puzzle takes anywhere from seconds to a few minutes
+(measured 2 s to 127 s across seeds) — the price of proving
+uniqueness by construction.
 
 ## What I didn't do (and why)
 
@@ -112,7 +114,7 @@ by construction.
 | `verify.py` | Batch verification: uniqueness, minimality, solvability, difficulty distribution |
 | `soundness.py` | Exhaustive rule-soundness check over all valid loops on small grids |
 | `demo.py` | One puzzle per tier, generator/solver duality, difficulty distribution chart |
-| `test_puzzle.py` | 25 unit tests |
+| `test_puzzle.py` | 30 unit tests (33 collected) |
 
 ## Running
 
@@ -131,7 +133,7 @@ The claims in this README each have a dedicated check, in increasing
 order of cost:
 
 ```bash
-python3 -m pytest test_puzzle.py -q   # 25 unit tests (~30 s)
+python3 -m pytest test_puzzle.py -q   # 30 unit tests (33 collected, ~30 s)
 python3 soundness.py                  # EVERY valid loop on small grids:
                                       # 1275 loops across 2x2, 3x3, 3x4 —
                                       # deduction rules never contradict
