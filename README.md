@@ -1,12 +1,11 @@
 # Slitherlink Puzzle Generator
 
 [![Tests](https://github.com/zyx100089-eng/puzzle-generator/actions/workflows/tests.yml/badge.svg)](https://github.com/zyx100089-eng/puzzle-generator/actions/workflows/tests.yml)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Generates Slitherlink puzzles whose solutions are **provably unique**,
-and grades their difficulty by the techniques a *human* would need —
-not by search depth.
+I wanted Slitherlink puzzles with **provably unique** solutions, so I
+built a generator that guarantees it — and then graded each puzzle's
+difficulty by the techniques a *human* would need to solve it, not by
+search depth.
 
 ![A generated 6x6 puzzle with its unique solution loop](docs/puzzle.png)
 
@@ -133,7 +132,7 @@ python3 cli.py --h 6 --w 6 --seed 3 --grade
 python3 cli.py --play                 # play with hints
 ```
 
-## How to verify my work
+## Reproduce this
 
 The claims in this README each have a dedicated check, in increasing
 order of cost:
