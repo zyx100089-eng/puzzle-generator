@@ -201,7 +201,7 @@ the player's hints are all one machine.
 ## References
 
 - Slitherlink rules: https://en.wikipedia.org/wiki/Slitherlink
-- Norvig's Sudoku solver write-up (solver philosophy)
+- Norvig's Sudoku solver write-up (solver philosophy): https://norvig.com/sudoku.html
 
 ## What I'd do next
 
