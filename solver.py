@@ -359,8 +359,20 @@ class Solver:
             return True
         return False
 
-    def deduce(self, max_passes: int = 64, use_loop_rules: bool = True) -> None:
-        for _ in range(max_passes):
+    def deduce(self, max_passes: int | None = None,
+               use_loop_rules: bool = True) -> None:
+        """Run the deduction rules to a fixed point.
+
+        Every rule only fixes UNKNOWN edges (monotonically — no rule
+        ever un-fixes an edge), so each pass either fixes at least one
+        edge or the rules have stalled: the loop terminates within
+        (#edges + 1) passes by construction.  max_passes may still cap
+        it for callers that want a bound; if a cap fires it raises a
+        Contradiction, which could in principle prune a satisfiable
+        branch (a *false* contradiction), so the default is uncapped.
+        """
+        passes = 0
+        while True:
             changed = False
             changed |= self._deduce_clues()
             changed |= self._deduce_corners()
@@ -374,7 +386,9 @@ class Solver:
                 raise Contradiction("local constraints violated after deduction")
             if not changed:
                 return
-        raise Contradiction("deduction did not converge")
+            passes += 1
+            if max_passes is not None and passes >= max_passes:
+                raise Contradiction("deduction pass cap exceeded")
 
     # ------------------------------------------------------------------
     # Search
